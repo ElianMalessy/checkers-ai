@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <functional>
-#include <iostream>
 
 Board MCTSNode::CopyBoard(const Board& board) const {
     Board newBoard;
@@ -100,7 +99,6 @@ Board MCTSNode::BestMove(Board& board) {
         keepBestScore = [](int a, int b) { return std::min(a, b); };
         bestScore = std::numeric_limits<double>::infinity();
     }
-    std::cout << "player: " << player << "bestScore: " << bestScore << std::endl;
 
     auto possibleMoves = board.getAllPossibleMoves(player);
     for (const auto& moveSet : possibleMoves) {
