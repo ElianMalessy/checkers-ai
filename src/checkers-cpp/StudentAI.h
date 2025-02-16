@@ -14,7 +14,7 @@ public:
 
     StudentAI(int col, int row, int p);
     virtual Move GetMove(Move board);
-    const int MCTS_ITERATIONS = 1000;
+    const int MCTS_ITERATIONS = 100;
 
 private:
     Move RunMCTS();
