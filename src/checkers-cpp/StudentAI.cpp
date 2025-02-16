@@ -41,10 +41,10 @@ Move StudentAI::RunMCTS() {
             node = node->AddChild(move);
         }
 
-        // Simulation
+        // Rollout
         Board simBoard = node->board;
         int simPlayer = node->turn;
-        int result = Simulate(simBoard, simPlayer);
+        int result = Rollout(simBoard, simPlayer);
 
         // Backpropagation
         while (node != nullptr) {
@@ -60,7 +60,7 @@ Move StudentAI::RunMCTS() {
     return bestChild ? bestChild->move : root.untriedMoves[0];
 }
 
-int StudentAI::Simulate(Board& board, int currentPlayer) {
+int StudentAI::Rollout(Board& board, int currentPlayer) {
     while (true) {
         int winner = board.isWin(currentPlayer);
         if (winner != 0) {

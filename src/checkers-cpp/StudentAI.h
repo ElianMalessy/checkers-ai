@@ -18,7 +18,7 @@ public:
 
 private:
     Move RunMCTS();
-    int Simulate(Board& board, int turn);
+    int Rollout(Board& board, int turn);
 };
 
 #endif //STUDENTAI_H
