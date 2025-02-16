@@ -24,8 +24,8 @@ public:
    double UCTValue(double c = 1.414) const;
    MCTSNode* SelectChild() const;
 
-   Board* BestMove(Board& board);
-   Board NewBoard(Board& board) const;
+   Board BestMove(Board& board);
+   Board CopyBoard(const Board& board) const;
 };
 
 #endif

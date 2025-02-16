@@ -3,14 +3,17 @@
 
 #include <cmath>
 #include <functional>
+#include <iostream>
 
-Board MCTSNode::NewBoard(Board& board) const {
+Board MCTSNode::CopyBoard(const Board& board) const {
     Board newBoard;
-    vector<vector<Checker>> modifiedBoard;
+    vector<vector<Checker>> boardVec;
     for(int i = 0; i < board.board.size(); i++) {
+        vector<Checker> row;
         for(int j = 0; j < board.board[i].size(); j++) {
-            modifiedBoard[i][j] = Checker(board.board[i][j].color, i, j);
+            row.push_back(Checker(board.board[i][j].color, i, j));
         }
+        boardVec.push_back(row);
     }
     newBoard.col = board.col;
     newBoard.row = board.row;
@@ -19,7 +22,7 @@ Board MCTSNode::NewBoard(Board& board) const {
     newBoard.whiteCount = board.whiteCount;
     newBoard.tieCount = board.tieCount;
     newBoard.tieMax = board.tieMax;
-    newBoard.board = modifiedBoard;
+    newBoard.board = boardVec;
 
     return newBoard;
 }
@@ -75,42 +78,44 @@ int evaluateMaterial(vector<vector<Checker>>& board) {
 
 
 // Heuristic function to evaluate the current board state
-int evaluateBoard(vector<vector<Checker>>& board) {
-    int score = 0;
+double evaluateBoard(vector<vector<Checker>>& board) {
+    double score = 0;
 
-    score += evaluateMaterial(board);
+    score += static_cast<double>(evaluateMaterial(board));
 
     return score;
 }
 
 
-Board* MCTSNode::BestMove(Board& board) {
-    Board *bestBoard = nullptr;
-    int bestScore;
+Board MCTSNode::BestMove(Board& board) {
+    Board bestBoard;
+    double bestScore;
 
-    std::function<int(int, int)> keepBestScore;
+    std::function<double(double, double)> keepBestScore;
     if(player == 1) {
         keepBestScore = [](int a, int b) { return std::max(a, b); };
-        bestScore = -std::numeric_limits<int>::infinity();
+        bestScore = -std::numeric_limits<double>::infinity();
     }
     else if(player == 2) {
         keepBestScore = [](int a, int b) { return std::min(a, b); };
-        bestScore = std::numeric_limits<int>::infinity();
+        bestScore = std::numeric_limits<double>::infinity();
     }
+    std::cout << "player: " << player << "bestScore: " << bestScore << std::endl;
 
     auto possibleMoves = board.getAllPossibleMoves(player);
     for (const auto& moveSet : possibleMoves) {
         for (const auto& m : moveSet) {
-            Board newBoard = NewBoard(board);
+            Board newBoard = CopyBoard(board);
             int newPlayer = player == 1 ? 2 : 1;
             newBoard.makeMove(m, player);
 
             // some heuristic
-            int score = evaluateBoard(newBoard.board);
-            int newBestScore = keepBestScore(bestScore, score);
+            double score = evaluateBoard(newBoard.board);
+            double newBestScore = keepBestScore(bestScore, score);
             if(newBestScore > bestScore) {
                 bestScore = newBestScore;
-                bestBoard = std::move(&newBoard);
+                bestBoard = CopyBoard(newBoard);
+                std::cout << bestBoard.blackCount;
             }
 
             MCTSNode *newNode = new MCTSNode(newPlayer, m, this);

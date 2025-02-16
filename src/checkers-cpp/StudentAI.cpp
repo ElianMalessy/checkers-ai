@@ -36,7 +36,7 @@ Move StudentAI::RunMCTS() {
         }
 
         // Expansion
-        Board newBoard = *node->BestMove(board);
+        Board newBoard = node->BestMove(board);
 
         // Rollout
         int simPlayer = node->player;
@@ -59,7 +59,7 @@ Move StudentAI::RunMCTS() {
 int StudentAI::Rollout(Board& board, int currentPlayer) {
     while (true) {
         int winner = board.isWin(currentPlayer);
-        if (winner != 0) {
+        if (winner > 0) {
             return winner;
         }
 
