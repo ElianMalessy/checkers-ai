@@ -45,8 +45,11 @@ Move StudentAI::RunMCTS() {
         // Backpropagation
         while (node != nullptr) {
             node->visits++;
-            if ((result == 1 && player == 1) || (result == 2 && player == 2)) {
+            if (result == node->player) {
                 node->wins++;
+            }
+            else {
+                node->wins--;
             }
             node = node->parent;
         }

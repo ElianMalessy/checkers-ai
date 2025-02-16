@@ -10,7 +10,9 @@ Board MCTSNode::CopyBoard(const Board& board) const {
     for(int i = 0; i < board.board.size(); i++) {
         vector<Checker> row;
         for(int j = 0; j < board.board[i].size(); j++) {
-            row.push_back(Checker(board.board[i][j].color, i, j));
+            auto checker = Checker(board.board[i][j].color, i, j);
+            checker.isKing = board.board[i][j].isKing;
+            row.push_back(checker);
         }
         boardVec.push_back(row);
     }

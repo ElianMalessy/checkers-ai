@@ -283,6 +283,7 @@ void Board::makeMove(const Move& move, int player)
     else if (player == 2)
         turn = "W";
     else {
+        std::cout << "Invalid player: " << player << std::endl;
         throw InvalidMoveError();
     }
     vector<Position> move_list = move.seq;
@@ -372,6 +373,7 @@ void Board::makeMove(const Move& move, int player)
             }
         }
         else {
+            std::cout << start[0] << " " << start[1] << " " << target[0] << " " << target[1] << " " << turn << std::endl;
             throw InvalidMoveError();
         }
 

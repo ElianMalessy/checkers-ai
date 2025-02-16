@@ -13,12 +13,12 @@ class Move
 public:
 	vector<Position> seq;
 	Move();
-    Move(const Move & move);
-    Move(const vector<Position> seq);
-    Move(const string & input);
-    vector<string> split(string input,string delimiter);
-    string toString();
-    bool isCapture();
+	Move(const Move & move);
+	Move(const vector<Position> seq);
+	Move(const string & input);
+	vector<string> split(string input,string delimiter);
+	string toString();
+	bool isCapture();
 };
 
 class MoveBuildError : public std::exception
