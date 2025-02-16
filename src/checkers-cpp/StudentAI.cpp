@@ -8,48 +8,44 @@ StudentAI::StudentAI(int col,int row,int p)
 {
     board = Board(col,row,p);
     board.initializeGame();
-    turn = 2;
+    player = 2;
 }
 
 Move StudentAI::GetMove(Move move) {
     if (move.seq.empty()) {
-        turn = 1;
+        player = 1;
     } else {
-        board.makeMove(move, turn == 1 ? 2 : 1);
+        board.makeMove(move, player == 1 ? 2 : 1);
     }
 
     Move bestMove = RunMCTS();
-    board.makeMove(bestMove, turn);
+    board.makeMove(bestMove, player);
     return bestMove;
 }
 
 
 Move StudentAI::RunMCTS() {
-    MCTSNode root(board, turn);
+    MCTSNode root(player);
 
     // Run MCTS for a fixed number of iterations
     for (int i = 0; i < MCTS_ITERATIONS; i++) {
         // Selection
         MCTSNode* node = &root;
-        while (!node->IsTerminal() && node->IsFullyExpanded()) {
+        while (node->visits > 0) {
             node = node->SelectChild();
         }
 
         // Expansion
-        if (!node->IsTerminal() && !node->untriedMoves.empty()) {
-            Move move = node->BestMove();
-            node = node->AddChild(move);
-        }
+        Board newBoard = *node->BestMove(board);
 
         // Rollout
-        Board simBoard = node->board;
-        int simPlayer = node->turn;
-        int result = Rollout(simBoard, simPlayer);
+        int simPlayer = node->player;
+        int result = Rollout(newBoard, simPlayer);
 
         // Backpropagation
         while (node != nullptr) {
             node->visits++;
-            if ((result == 1 && turn == 1) || (result == 2 && turn == 2)) {
+            if ((result == 1 && player == 1) || (result == 2 && player == 2)) {
                 node->wins++;
             }
             node = node->parent;
@@ -57,7 +53,7 @@ Move StudentAI::RunMCTS() {
     }
 
     MCTSNode* bestChild = root.SelectChild();
-    return bestChild ? bestChild->move : root.untriedMoves[0];
+    return bestChild->move;
 }
 
 int StudentAI::Rollout(Board& board, int currentPlayer) {

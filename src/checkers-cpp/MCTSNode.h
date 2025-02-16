@@ -8,24 +8,24 @@
 #include "Move.h"
 
 class MCTSNode {
-   public:
-    Move move;
-    Board board;
-    int turn;
-    int visits;
-    double wins;
-    MCTSNode* parent;
-    std::vector<std::unique_ptr<MCTSNode>> children;
-    std::vector<Move> untriedMoves;
+public:
+   int player;
+   int visits;
+   int wins;
+   double value;
+   Move move;
 
-    MCTSNode(Board board, int player, Move move = Move(), MCTSNode* parent = nullptr);
+   MCTSNode* parent;
+   std::vector<MCTSNode*> children;
 
-    double UCTValue(double c = 1.414) const;
-    MCTSNode* SelectChild() const;
-    Move BestMove();
-    MCTSNode* AddChild(const Move& move);
-    bool IsFullyExpanded() const;
-    bool IsTerminal() const;
+   MCTSNode(int player, Move move = Move(), MCTSNode* parent = nullptr);
+   ~MCTSNode();
+
+   double UCTValue(double c = 1.414) const;
+   MCTSNode* SelectChild() const;
+
+   Board* BestMove(Board& board);
+   Board NewBoard(Board& board) const;
 };
 
 #endif

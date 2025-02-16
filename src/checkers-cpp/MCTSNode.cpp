@@ -1,28 +1,43 @@
 #include "MCTSNode.h"
+#include "Checker.h"
 
-#include <algorithm>
 #include <cmath>
-#include <random>
+#include <functional>
 
-MCTSNode::MCTSNode(Board board, int turn, Move move, MCTSNode* parent)
-    : board(board), turn(turn), move(move), parent(parent), visits(0), wins(0) {
-    // Get all possible moves for this state
-    auto possibleMoves = board.getAllPossibleMoves(turn);
-    for (const auto& moveSet : possibleMoves) {
-        for (const auto& m : moveSet) {
-            untriedMoves.push_back(m);
+Board MCTSNode::NewBoard(Board& board) const {
+    Board newBoard;
+    vector<vector<Checker>> modifiedBoard;
+    for(int i = 0; i < board.board.size(); i++) {
+        for(int j = 0; j < board.board[i].size(); j++) {
+            modifiedBoard[i][j] = Checker(board.board[i][j].color, i, j);
         }
     }
+    newBoard.col = board.col;
+    newBoard.row = board.row;
+    newBoard.p = board.p;
+    newBoard.blackCount = board.blackCount;
+    newBoard.whiteCount = board.whiteCount;
+    newBoard.tieCount = board.tieCount;
+    newBoard.tieMax = board.tieMax;
+    newBoard.board = modifiedBoard;
 
-    // Shuffle untried moves for random selection
-    // std::random_device rd;
-    // std::mt19937 g(rd());
-    // std::shuffle(untriedMoves.begin(), untriedMoves.end(), g);
+    return newBoard;
+}
+
+
+MCTSNode::MCTSNode(int player, Move move, MCTSNode* parent)
+    : player(player), move(move), parent(parent), visits(0), wins(0) {
+}
+
+MCTSNode::~MCTSNode() {
+    for (auto child : children) {
+        delete child;
+    }
 }
 
 double MCTSNode::UCTValue(double c) const {
     if (visits == 0) return std::numeric_limits<double>::infinity();
-    return (wins / visits) + c * std::sqrt(std::log(parent->visits) / visits);
+    return (static_cast<double>(wins) / visits) + c * std::sqrt(std::log(parent->visits) / visits);
 }
 
 MCTSNode* MCTSNode::SelectChild() const {
@@ -33,42 +48,76 @@ MCTSNode* MCTSNode::SelectChild() const {
         double uctValue = child->UCTValue();
         if (uctValue > bestValue) {
             bestValue = uctValue;
-            bestChild = child.get();
+            bestChild = child;
         }
     }
     return bestChild;
 }
 
-// Move MCTSNode::BestMove() {
-//     // some heuristic
-//
-//     Board newBoard = board;
-//     newBoard.makeMove(move, turn);
-//
-//
-// }
+int evaluateMaterial(vector<vector<Checker>>& board) {
+    int material = 0;
+    int BOARD_SIZE = board.size();
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+            if (board[i][j].color == "W" && !board[i][j].isKing) {
+                material += 1;  // regular white piece
+            } else if (board[i][j].color == "W" && board[i][j].isKing) {
+                material += 3;  // kings are more valuable
+            } else if (board[i][j].color == "B" && !board[i][j].isKing) {
+                material -= 1;  // regular black piece
+            } else if (board[i][j].color == "B" && board[i][j].isKing) {
+                material -= 3;  // kings are more valuable
+            }
+        }
+    }
+    return material;
+}
 
-MCTSNode* MCTSNode::AddChild(const Move& move) {
-    Board newBoard = board;
-    newBoard.makeMove(move, turn);
-    int nextPlayer = (turn == 1) ? 2 : 1;
 
-    children.push_back(std::make_unique<MCTSNode>(newBoard, nextPlayer, move, this));
+// Heuristic function to evaluate the current board state
+int evaluateBoard(vector<vector<Checker>>& board) {
+    int score = 0;
 
-    // Remove the move from untried moves
-    auto it = std::find(untriedMoves.begin(), untriedMoves.end(), move);
-    if (it != untriedMoves.end()) {
-        untriedMoves.erase(it);
+    score += evaluateMaterial(board);
+
+    return score;
+}
+
+
+Board* MCTSNode::BestMove(Board& board) {
+    Board *bestBoard = nullptr;
+    int bestScore;
+
+    std::function<int(int, int)> keepBestScore;
+    if(player == 1) {
+        keepBestScore = [](int a, int b) { return std::max(a, b); };
+        bestScore = -std::numeric_limits<int>::infinity();
+    }
+    else if(player == 2) {
+        keepBestScore = [](int a, int b) { return std::min(a, b); };
+        bestScore = std::numeric_limits<int>::infinity();
     }
 
-    return children.back().get();
+    auto possibleMoves = board.getAllPossibleMoves(player);
+    for (const auto& moveSet : possibleMoves) {
+        for (const auto& m : moveSet) {
+            Board newBoard = NewBoard(board);
+            int newPlayer = player == 1 ? 2 : 1;
+            newBoard.makeMove(m, player);
+
+            // some heuristic
+            int score = evaluateBoard(newBoard.board);
+            int newBestScore = keepBestScore(bestScore, score);
+            if(newBestScore > bestScore) {
+                bestScore = newBestScore;
+                bestBoard = std::move(&newBoard);
+            }
+
+            MCTSNode *newNode = new MCTSNode(newPlayer, m, this);
+            children.push_back(newNode);
+        }
+    }
+
+    return bestBoard;
 }
 
-bool MCTSNode::IsFullyExpanded() const {
-    return untriedMoves.empty();
-}
-
-bool MCTSNode::IsTerminal() const {
-    Board tempBoard = board;
-    return tempBoard.isWin(turn) != 0;
-}

@@ -10,7 +10,7 @@ class StudentAI :public AI
 {
 public:
     Board board;
-    int turn;
+    int player;
 
     StudentAI(int col, int row, int p);
     virtual Move GetMove(Move board);
