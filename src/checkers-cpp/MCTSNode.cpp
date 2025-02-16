@@ -113,7 +113,6 @@ Board MCTSNode::BestMove(Board& board) {
             if(newBestScore > bestScore) {
                 bestScore = newBestScore;
                 bestBoard = CopyBoard(newBoard);
-                std::cout << bestBoard.blackCount;
             }
 
             MCTSNode *newNode = new MCTSNode(newPlayer, m, this);
