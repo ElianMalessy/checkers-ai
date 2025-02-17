@@ -19,13 +19,14 @@ public:
    std::vector<MCTSNode*> children;
 
    MCTSNode(int player, Move move = Move(), MCTSNode* parent = nullptr);
-   ~MCTSNode();
 
    double UCTValue(double c = 1.414) const;
    MCTSNode* SelectChild() const;
 
-   Board BestMove(Board& board);
-   Board CopyBoard(const Board& board) const;
+   Move BestMove(Board& board, const vector<vector<Move>>& possibleMoves);
+
+   static void DeleteTree(MCTSNode* root);
+   static Board CopyBoard(const Board& board);
 };
 
 #endif

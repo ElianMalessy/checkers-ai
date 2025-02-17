@@ -2,6 +2,7 @@
 #define STUDENTAI_H
 #include "AI.h"
 #include "Board.h"
+#include "MCTSNode.h"
 #pragma once
 
 //The following part should be completed by students.
@@ -14,11 +15,12 @@ public:
 
     StudentAI(int col, int row, int p);
     virtual Move GetMove(Move board);
-    const int MCTS_ITERATIONS = 100;
+    const int MCTS_ITERATIONS = 50;
 
 private:
     Move RunMCTS();
     int Rollout(Board& board, int turn);
+		void backpropagate(MCTSNode* node, int result);
 };
 
 #endif //STUDENTAI_H

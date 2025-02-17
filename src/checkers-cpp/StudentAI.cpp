@@ -1,5 +1,4 @@
 #include "StudentAI.h"
-#include "MCTSNode.h"
 
 //The following part should be completed by students.
 //The students can modify anything except the class name and exisiting functions and varibles.
@@ -31,38 +30,50 @@ Move StudentAI::RunMCTS() {
     for (int i = 0; i < MCTS_ITERATIONS; i++) {
         // Selection
         MCTSNode* node = &root;
+        Board newBoard = MCTSNode::CopyBoard(board);
         while (node->visits > 0) {
-            node = node->SelectChild();
+            const int prevPlayer = node->player;
+            auto next = node->SelectChild();
+            if(next == nullptr) {
+                int result = newBoard.isWin(prevPlayer);
+                backpropagate(node, result);
+                break;
+            }
+
+            node = next;
+            newBoard.makeMove(node->move, prevPlayer);
         }
 
         // Expansion
-        Board newBoard = node->BestMove(board);
+        auto possibleMoves = newBoard.getAllPossibleMoves(node->player);
+        int winner = 0;
+        if (possibleMoves.size() == 0) {
+            winner = newBoard.isWin(node->player == 1 ? 2 : 1);
+        }
+        else {
+            Move bestMove = node->BestMove(newBoard, possibleMoves);
+            newBoard.makeMove(bestMove, node->player);
 
-        // Rollout
-        int simPlayer = node->player;
-        int result = Rollout(newBoard, simPlayer);
+            // Rollout
+            int simPlayer = node->player;
+            winner = Rollout(newBoard, simPlayer);
+        }
 
         // Backpropagation
-        while (node != nullptr) {
-            node->visits++;
-            if (result == node->player) {
-                node->wins++;
-            }
-            else {
-                node->wins--;
-            }
-            node = node->parent;
-        }
+        backpropagate(node, winner);
     }
 
     MCTSNode* bestChild = root.SelectChild();
-    return bestChild->move;
+    Move bestMove = bestChild->move;
+    MCTSNode::DeleteTree(&root);
+
+    return bestMove;
 }
 
 int StudentAI::Rollout(Board& board, int currentPlayer) {
     while (true) {
         int winner = board.isWin(currentPlayer);
-        if (winner > 0) {
+        if (winner != 0) {
             return winner;
         }
 
@@ -77,5 +88,18 @@ int StudentAI::Rollout(Board& board, int currentPlayer) {
         board.makeMove(moves[i][j], currentPlayer);
 
         currentPlayer = currentPlayer == 1 ? 2 : 1;
+    }
+}
+
+void StudentAI::backpropagate(MCTSNode* node, int winner) {
+    while (node != nullptr) {
+        node->visits++;
+        if (winner == node->player || winner == -1) {
+            node->wins++;
+        }
+        else {
+            node->wins--;
+        }
+        node = node->parent;
     }
 }

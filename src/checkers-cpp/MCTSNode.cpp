@@ -4,38 +4,15 @@
 #include <cmath>
 #include <functional>
 
-Board MCTSNode::CopyBoard(const Board& board) const {
-    Board newBoard;
-    vector<vector<Checker>> boardVec;
-    for(int i = 0; i < board.board.size(); i++) {
-        vector<Checker> row;
-        for(int j = 0; j < board.board[i].size(); j++) {
-            auto checker = Checker(board.board[i][j].color, i, j);
-            checker.isKing = board.board[i][j].isKing;
-            row.push_back(checker);
-        }
-        boardVec.push_back(row);
-    }
-    newBoard.col = board.col;
-    newBoard.row = board.row;
-    newBoard.p = board.p;
-    newBoard.blackCount = board.blackCount;
-    newBoard.whiteCount = board.whiteCount;
-    newBoard.tieCount = board.tieCount;
-    newBoard.tieMax = board.tieMax;
-    newBoard.board = boardVec;
-
-    return newBoard;
-}
-
 
 MCTSNode::MCTSNode(int player, Move move, MCTSNode* parent)
     : player(player), move(move), parent(parent), visits(0), wins(0) {
+
 }
 
-MCTSNode::~MCTSNode() {
-    for (auto child : children) {
-        delete child;
+void MCTSNode::DeleteTree(MCTSNode* root) {
+    for (auto child : root->children) {
+        DeleteTree(child);
     }
 }
 
@@ -64,13 +41,13 @@ int evaluateMaterial(vector<vector<Checker>>& board) {
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
             if (board[i][j].color == "W" && !board[i][j].isKing) {
-                material += 1;  // regular white piece
+                material += 1;
             } else if (board[i][j].color == "W" && board[i][j].isKing) {
-                material += 3;  // kings are more valuable
+                material += 3;
             } else if (board[i][j].color == "B" && !board[i][j].isKing) {
-                material -= 1;  // regular black piece
+                material -= 1;
             } else if (board[i][j].color == "B" && board[i][j].isKing) {
-                material -= 3;  // kings are more valuable
+                material -= 3;
             }
         }
     }
@@ -88,8 +65,8 @@ double evaluateBoard(vector<vector<Checker>>& board) {
 }
 
 
-Board MCTSNode::BestMove(Board& board) {
-    Board bestBoard;
+Move MCTSNode::BestMove(Board& board, const vector<vector<Move>>& possibleMoves) {
+    const Move *bestMove;
     double bestScore;
 
     std::function<double(double, double)> keepBestScore;
@@ -102,26 +79,54 @@ Board MCTSNode::BestMove(Board& board) {
         bestScore = std::numeric_limits<double>::infinity();
     }
 
-    auto possibleMoves = board.getAllPossibleMoves(player);
+    const int newPlayer = player == 1 ? 2 : 1;
+
     for (const auto& moveSet : possibleMoves) {
         for (const auto& m : moveSet) {
             Board newBoard = CopyBoard(board);
-            int newPlayer = player == 1 ? 2 : 1;
             newBoard.makeMove(m, player);
+
+            MCTSNode *newNode = new MCTSNode(newPlayer, m, this);
+            children.push_back(newNode);
 
             // some heuristic
             double score = evaluateBoard(newBoard.board);
             double newBestScore = keepBestScore(bestScore, score);
-            if(newBestScore > bestScore) {
+
+            if(newBestScore != bestScore) {
                 bestScore = newBestScore;
-                bestBoard = CopyBoard(newBoard);
+                bestMove = &m;
             }
 
-            MCTSNode *newNode = new MCTSNode(newPlayer, m, this);
-            children.push_back(newNode);
         }
     }
 
-    return bestBoard;
+    return *bestMove;
 }
+
+
+Board MCTSNode::CopyBoard(const Board& board) {
+    Board newBoard;
+    vector<vector<Checker>> boardVec;
+    for(int i = 0; i < board.board.size(); i++) {
+        vector<Checker> row;
+        for(int j = 0; j < board.board[i].size(); j++) {
+            auto checker = Checker(board.board[i][j].color, i, j);
+            checker.isKing = board.board[i][j].isKing;
+            row.push_back(checker);
+        }
+        boardVec.push_back(row);
+    }
+    newBoard.col = board.col;
+    newBoard.row = board.row;
+    newBoard.p = board.p;
+    newBoard.blackCount = board.blackCount;
+    newBoard.whiteCount = board.whiteCount;
+    newBoard.tieCount = board.tieCount;
+    newBoard.tieMax = board.tieMax;
+    newBoard.board = boardVec;
+
+    return newBoard;
+}
+
 
