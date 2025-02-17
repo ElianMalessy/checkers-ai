@@ -36,6 +36,7 @@ class GameLogic:
                     winPlayer = 1
                 break
             try:
+                print(f'Making move {move}')
                 board.make_move(move,player)
             except InvalidMoveError:
                 print("Invalid Move!",file=fh)
