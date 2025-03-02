@@ -119,7 +119,7 @@ class StudentAI():
         self.color = 2
 
         self.player = 2
-        self.MCTS_ITERATIONS = 50
+        self.MCTS_ITERATIONS = 1000
     
     def get_move(self,move):
         if len(move) != 0:
