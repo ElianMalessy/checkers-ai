@@ -25,7 +25,7 @@ public:
    MCTSNode(int player, Move move = Move(), MCTSNode* parent = nullptr);
 
    double UCTValue(double c = 1.414) const;
-   MCTSNode* SelectChild(int rootColor) const;
+   MCTSNode* SelectChild() const;
    Move BestMove(Board& board, const vector<vector<Move>>& possibleMoves);
 
    static void DeleteTree(MCTSNode* root);

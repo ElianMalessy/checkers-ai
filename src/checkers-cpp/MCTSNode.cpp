@@ -22,23 +22,16 @@ double MCTSNode::UCTValue(double c) const {
     return (static_cast<double>(wins) / visits) + c * std::sqrt(std::log(parent->visits) / visits);
 }
 
-MCTSNode* MCTSNode::SelectChild(int rootColor) const {
+MCTSNode* MCTSNode::SelectChild() const {
     MCTSNode* bestChild = nullptr;
 
     double bestValue;
     std::function<double(double, double)> keepBestScore;
-    if(player == rootColor) {
-        bestValue = -std::numeric_limits<double>::infinity();
-        keepBestScore = [](int a, int b) { return std::max(a, b); };
-    }
-    else {
-        bestValue = std::numeric_limits<double>::infinity();
-        keepBestScore = [](int a, int b) { return std::min(a, b); };
-    }
+    bestValue = -std::numeric_limits<double>::infinity();
 
     for (const auto& child : children) {
         double uctValue = child->UCTValue();
-        if (uctValue != bestValue) {
+        if (uctValue > bestValue) {
             bestValue = uctValue;
             bestChild = child;
         }
@@ -81,14 +74,16 @@ Move MCTSNode::BestMove(Board& board, const vector<vector<Move>>& possibleMoves)
     double bestScore;
 
     std::function<double(double, double)> keepBestScore;
-    if(player == BLACK) {
-        keepBestScore = [](int a, int b) { return std::max(a, b); };
-        bestScore = -std::numeric_limits<double>::infinity();
-    }
-    else if(player == WHITE) {
-        keepBestScore = [](int a, int b) { return std::min(a, b); };
-        bestScore = std::numeric_limits<double>::infinity();
-    }
+    keepBestScore = [](int a, int b) { return std::max(a, b); };
+    bestScore = -std::numeric_limits<double>::infinity();
+    // if(player == BLACK) {
+    //     keepBestScore = [](int a, int b) { return std::max(a, b); };
+    //     bestScore = -std::numeric_limits<double>::infinity();
+    // }
+    // else if(player == WHITE) {
+    //     keepBestScore = [](int a, int b) { return std::min(a, b); };
+    //     bestScore = std::numeric_limits<double>::infinity();
+    // }
 
     const int newPlayer = player == BLACK ? WHITE : BLACK;
 
@@ -147,7 +142,6 @@ void MCTSNode::showTree(MCTSNode* root, int level) {
     if(current->visits > 0) {
         cout << std::setw(level) << "" << " Wins: " << current->wins << " Player: " << current->player << endl;
     }
-
 
     for(auto child : current->children) {
         if(level < 2) {

@@ -28,7 +28,6 @@ Move StudentAI::GetMove(Move move) {
 Move StudentAI::RunMCTS() {
     std::srand(std::time(0));
     MCTSNode root(player);
-    int winners[3] = {0, 0, 0};
 
     // Run MCTS for a fixed number of iterations
     for (int i = 0; i < MCTS_ITERATIONS; i++) {
@@ -37,7 +36,7 @@ Move StudentAI::RunMCTS() {
         Board newBoard = MCTSNode::CopyBoard(board);
         while (node->visits > 0) {
             const int prevPlayer = node->player;
-            auto next = node->SelectChild(player);
+            auto next = node->SelectChild();
             if(next == nullptr) {
                 int result = newBoard.isWin(prevPlayer);
                 backpropagate(node, result);
@@ -60,22 +59,15 @@ Move StudentAI::RunMCTS() {
 
             // Rollout
             winner = Rollout(newBoard, node->player);
-            if(winner == -1) {
-                winners[0]++;
-            }
-            else {
-                winners[winner]++;
-            }
         }
 
         // Backpropagation
         backpropagate(node, winner);
     }
 
-    MCTSNode* bestChild = root.SelectChild(player);
+    MCTSNode* bestChild = root.SelectChild();
     Move bestMove = bestChild->move;
     MCTSNode* current = &root;
-
 
     // MCTSNode::showTree(&root, 0);
     MCTSNode::DeleteTree(&root);
@@ -106,9 +98,6 @@ void StudentAI::backpropagate(MCTSNode* node, int winner) {
         node->visits++;
         if (winner == node->player || winner == -1) {
             node->wins++;
-        }
-        else {
-            node->wins--;
         }
         node = node->parent;
     }
