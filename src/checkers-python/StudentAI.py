@@ -71,15 +71,9 @@ class MCTSNode:
         bestScore = 0
 
         def keepBestScore(a, b):
-            if self.player == 1:
-                return max(a, b)
-            elif self.player == 2:
-                return min(a, b)
+            return max(a,b)
 
-        if self.player == 1:
-            bestScore = float('-inf')
-        elif self.player == 2:
-            bestScore = float('inf')
+        bestScore = float('-inf')
         
         newPlayer = 2 if player == 1 else 1
 
@@ -164,35 +158,29 @@ class StudentAI():
                 bestMove = node.bestMove(newBoard, possible_moves)
                 newBoard.make_move(bestMove, node.player)
 
-                simPlayer = node.player
-                winner = self.rollout(newBoard, simPlayer)
+                winner = self.rollout(newBoard, node.player)
 
             # Backpropagate
             self.backpropagate(node, winner)
     
-    def rollout(self, board, curr_player):
+    def rollout(self, board, prevPlayer):
         while True:
-            winner = board.is_win(curr_player)
+            winner = board.is_win(prevPlayer)
             if winner:
                 return winner
 
-            moves = board.get_all_possible_moves(curr_player)
-            if not moves:
-                return 2 if curr_player == 1 else 1
+            prevPlayer = 2 if prevPlayer == 1 else 1
+            moves = board.get_all_possible_moves(prevPlayer)
+            
             
             i = randint(0, len(moves)-1)
             j = randint(0, len(moves[i])-1)
-            board.make_move(moves[i][j], curr_player)
-
-            curr_player = 2 if curr_player == 1 else 1
+            board.make_move(moves[i][j], prevPlayer)
 
 
     def backpropagate(self, node, result):
         while node:
             node.visits += 1
-
             if winner == node.player or winner == -1:
                 node.wins += 1
-            else:
-                node.wins -= 1
             node = node.parent
