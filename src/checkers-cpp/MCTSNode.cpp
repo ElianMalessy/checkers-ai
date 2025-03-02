@@ -7,7 +7,7 @@
 
 
 MCTSNode::MCTSNode(int player, Move move, MCTSNode* parent)
-    : player(player), move(move), parent(parent), visits(0), wins(0) {
+    : player(player), move(move), parent(parent), visits(0), wins(0), totalMoveCount(0) {
 
 }
 
@@ -15,6 +15,7 @@ void MCTSNode::DeleteTree(MCTSNode* root) {
     for (auto child : root->children) {
         DeleteTree(child);
     }
+    delete root;
 }
 
 double MCTSNode::UCTValue(double c) const {
@@ -24,15 +25,39 @@ double MCTSNode::UCTValue(double c) const {
 
 MCTSNode* MCTSNode::SelectChild() const {
     MCTSNode* bestChild = nullptr;
-
     double bestValue;
-    std::function<double(double, double)> keepBestScore;
     bestValue = -std::numeric_limits<double>::infinity();
 
     for (const auto& child : children) {
         double uctValue = child->UCTValue();
         if (uctValue > bestValue) {
             bestValue = uctValue;
+            bestChild = child;
+        }
+    }
+    return bestChild;
+}
+
+MCTSNode* MCTSNode::SelectChild(const Move& move) const {
+    for (const auto& child : children) {
+        for(int i = 0; i < move.seq.size(); i++) {
+            if(child->move.seq[i].x == move.seq[i].x && child->move.seq[i].y == move.seq[i].y) {
+                return child;
+            }
+            MCTSNode::DeleteTree(child);
+        }
+
+    }
+
+    return nullptr;
+}
+
+MCTSNode* MCTSNode::SelectBestChild() const {
+    MCTSNode* bestChild = nullptr;
+    int bestValue = 0;
+    for (const auto& child : children) {
+        if (child->visits > bestValue) {
+            bestValue = child->visits;
             bestChild = child;
         }
     }
@@ -69,31 +94,25 @@ double evaluateBoard(vector<vector<Checker>>& board) {
 }
 
 
-Move MCTSNode::BestMove(Board& board, const vector<vector<Move>>& possibleMoves) {
+Move MCTSNode::ExpandNode(Board& board, const vector<vector<Move>>& possibleMoves) {
     const Move *bestMove;
     double bestScore;
+    const int newPlayer = player == BLACK ? WHITE : BLACK;
 
     std::function<double(double, double)> keepBestScore;
-    keepBestScore = [](int a, int b) { return std::max(a, b); };
-    bestScore = -std::numeric_limits<double>::infinity();
-    // if(player == BLACK) {
-    //     keepBestScore = [](int a, int b) { return std::max(a, b); };
-    //     bestScore = -std::numeric_limits<double>::infinity();
-    // }
-    // else if(player == WHITE) {
-    //     keepBestScore = [](int a, int b) { return std::min(a, b); };
-    //     bestScore = std::numeric_limits<double>::infinity();
-    // }
-
-    const int newPlayer = player == BLACK ? WHITE : BLACK;
+    if(player == BLACK) {
+        keepBestScore = [](int a, int b) { return std::max(a, b); };
+        bestScore = -std::numeric_limits<double>::infinity();
+    }
+    else if(player == WHITE) {
+        keepBestScore = [](int a, int b) { return std::min(a, b); };
+        bestScore = std::numeric_limits<double>::infinity();
+    }
 
     for (const auto& moveSet : possibleMoves) {
         for (const auto& m : moveSet) {
             Board newBoard = CopyBoard(board);
             newBoard.makeMove(m, player);
-
-            MCTSNode *newNode = new MCTSNode(newPlayer, m, this);
-            children.push_back(newNode);
 
             // some heuristic
             double score = evaluateBoard(newBoard.board);
@@ -107,6 +126,8 @@ Move MCTSNode::BestMove(Board& board, const vector<vector<Move>>& possibleMoves)
         }
     }
 
+    MCTSNode *newNode = new MCTSNode(newPlayer, *bestMove, this);
+    children.push_back(newNode);
     return *bestMove;
 }
 
@@ -136,6 +157,17 @@ Board MCTSNode::CopyBoard(const Board& board) {
 }
 
 
+bool MCTSNode::isFullyExpanded(Board& board) {
+    if(totalMoveCount == 0) {
+        for (const auto& moveSet : board.getAllPossibleMoves(player)) {
+            totalMoveCount += moveSet.size();
+        }
+    }
+
+    return children.size() == totalMoveCount;
+}
+
+
 
 void MCTSNode::showTree(MCTSNode* root, int level) {
     MCTSNode* current = root;
@@ -144,7 +176,7 @@ void MCTSNode::showTree(MCTSNode* root, int level) {
     }
 
     for(auto child : current->children) {
-        if(level < 2) {
+        if(level < 3) {
             showTree(child, level + 1);
         }
     }

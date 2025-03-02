@@ -12,10 +12,12 @@ class StudentAI :public AI
 public:
     Board board;
     int player;
+    // MCTSNode *root;
 
     StudentAI(int col, int row, int p);
+    ~StudentAI();
     virtual Move GetMove(Move board);
-    static constexpr int MCTS_ITERATIONS = 200;
+    static constexpr int MCTS_ITERATIONS = 100;
     static constexpr int BLACK = 1;
     static constexpr int WHITE = 2;
 

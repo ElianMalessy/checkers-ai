@@ -10,13 +10,24 @@ StudentAI::StudentAI(int col,int row,int p)
     board = Board(col,row,p);
     board.initializeGame();
     player = 2;
+    // root = new MCTSNode(player);
+}
+
+StudentAI::~StudentAI() {
+    // MCTSNode::DeleteTree(root);
 }
 
 Move StudentAI::GetMove(Move move) {
     if (move.seq.empty()) {
         player = 1;
+        // root->player = 1;
     } else {
         board.makeMove(move, player == 1 ? 2 : 1);
+        // if(root->visits > 0) {
+        //     MCTSNode* node = root->SelectChild(move);
+        //     delete root;
+        //     root = node;
+        // }
     }
 
     Move bestMove = RunMCTS();
@@ -27,14 +38,14 @@ Move StudentAI::GetMove(Move move) {
 
 Move StudentAI::RunMCTS() {
     std::srand(std::time(0));
-    MCTSNode root(player);
+    MCTSNode* root = new MCTSNode(player);
 
     // Run MCTS for a fixed number of iterations
     for (int i = 0; i < MCTS_ITERATIONS; i++) {
         // Selection
-        MCTSNode* node = &root;
+        MCTSNode* node = root;
         Board newBoard = MCTSNode::CopyBoard(board);
-        while (node->visits > 0) {
+        while (node->isFullyExpanded(newBoard)) {
             const int prevPlayer = node->player;
             auto next = node->SelectChild();
             if(next == nullptr) {
@@ -50,11 +61,11 @@ Move StudentAI::RunMCTS() {
         // Expansion
         auto possibleMoves = newBoard.getAllPossibleMoves(node->player);
         int winner = 0;
-        if (possibleMoves.size() == 0) {
+        if (possibleMoves.empty()) {
             winner = newBoard.isWin(node->player == 1 ? 2 : 1);
         }
         else {
-            Move bestMove = node->BestMove(newBoard, possibleMoves);
+            Move bestMove = node->ExpandNode(newBoard, possibleMoves);
             newBoard.makeMove(bestMove, node->player);
 
             // Rollout
@@ -65,12 +76,18 @@ Move StudentAI::RunMCTS() {
         backpropagate(node, winner);
     }
 
-    MCTSNode* bestChild = root.SelectChild();
+    MCTSNode* bestChild = root->SelectBestChild();
     Move bestMove = bestChild->move;
-    MCTSNode* current = &root;
 
-    // MCTSNode::showTree(&root, 0);
-    MCTSNode::DeleteTree(&root);
+    // root = new MCTSNode(player);
+    // for(auto child : root->children) {
+    //     if(child != bestChild) {
+    //         MCTSNode::DeleteTree(child);
+    //     }
+    // }
+    // delete root;
+    // root = bestChild;
+    MCTSNode::DeleteTree(root);
 
     return bestMove;
 }
@@ -93,6 +110,7 @@ int StudentAI::Rollout(Board& board, int prevPlayer) {
     }
 }
 
+// taking forever
 void StudentAI::backpropagate(MCTSNode* node, int winner) {
     while (node != nullptr) {
         node->visits++;

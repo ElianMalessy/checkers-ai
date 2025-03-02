@@ -12,8 +12,8 @@ public:
    int player;
    int visits;
    int wins;
-   double value;
    Move move;
+   int totalMoveCount;
 
 
    static constexpr int BLACK = 1;
@@ -26,7 +26,10 @@ public:
 
    double UCTValue(double c = 1.414) const;
    MCTSNode* SelectChild() const;
-   Move BestMove(Board& board, const vector<vector<Move>>& possibleMoves);
+   MCTSNode* SelectChild(const Move& move) const;
+   MCTSNode* SelectBestChild() const;
+   Move ExpandNode(Board& board, const vector<vector<Move>>& possibleMoves);
+   bool isFullyExpanded(Board& board);
 
    static void DeleteTree(MCTSNode* root);
    static Board CopyBoard(const Board& board);
