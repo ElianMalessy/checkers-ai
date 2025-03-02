@@ -1,5 +1,7 @@
 #include "StudentAI.h"
 
+#include <iostream>
+
 //The following part should be completed by students.
 //The students can modify anything except the class name and exisiting functions and varibles.
 StudentAI::StudentAI(int col,int row,int p)
@@ -24,7 +26,9 @@ Move StudentAI::GetMove(Move move) {
 
 
 Move StudentAI::RunMCTS() {
+    std::srand(std::time(0));
     MCTSNode root(player);
+    int winners[3] = {0, 0, 0};
 
     // Run MCTS for a fixed number of iterations
     for (int i = 0; i < MCTS_ITERATIONS; i++) {
@@ -33,7 +37,7 @@ Move StudentAI::RunMCTS() {
         Board newBoard = MCTSNode::CopyBoard(board);
         while (node->visits > 0) {
             const int prevPlayer = node->player;
-            auto next = node->SelectChild();
+            auto next = node->SelectChild(player);
             if(next == nullptr) {
                 int result = newBoard.isWin(prevPlayer);
                 backpropagate(node, result);
@@ -55,39 +59,45 @@ Move StudentAI::RunMCTS() {
             newBoard.makeMove(bestMove, node->player);
 
             // Rollout
-            int simPlayer = node->player;
-            winner = Rollout(newBoard, simPlayer);
+            winner = Rollout(newBoard, node->player);
+            if(winner == -1) {
+                winners[0]++;
+            }
+            else {
+                winners[winner]++;
+            }
         }
 
         // Backpropagation
         backpropagate(node, winner);
     }
 
-    MCTSNode* bestChild = root.SelectChild();
+    MCTSNode* bestChild = root.SelectChild(player);
     Move bestMove = bestChild->move;
+    MCTSNode* current = &root;
+
+
+    // MCTSNode::showTree(&root, 0);
     MCTSNode::DeleteTree(&root);
 
     return bestMove;
 }
 
-int StudentAI::Rollout(Board& board, int currentPlayer) {
+int StudentAI::Rollout(Board& board, int prevPlayer) {
     while (true) {
-        int winner = board.isWin(currentPlayer);
+        int winner = board.isWin(prevPlayer);
         if (winner != 0) {
             return winner;
         }
 
-        auto moves = board.getAllPossibleMoves(currentPlayer);
-        if (moves.empty()) {
-            return currentPlayer == 1 ? 2 : 1;
-        }
+        prevPlayer = prevPlayer == 1 ? 2 : 1;
+        auto moves = board.getAllPossibleMoves(prevPlayer);
 
         // Random move selection
         int i = rand() % moves.size();
         int j = rand() % moves[i].size();
-        board.makeMove(moves[i][j], currentPlayer);
+        board.makeMove(moves[i][j], prevPlayer);
 
-        currentPlayer = currentPlayer == 1 ? 2 : 1;
     }
 }
 

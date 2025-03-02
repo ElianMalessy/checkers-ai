@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <functional>
+#include <iomanip>
 
 
 MCTSNode::MCTSNode(int player, Move move, MCTSNode* parent)
@@ -21,13 +22,23 @@ double MCTSNode::UCTValue(double c) const {
     return (static_cast<double>(wins) / visits) + c * std::sqrt(std::log(parent->visits) / visits);
 }
 
-MCTSNode* MCTSNode::SelectChild() const {
-    double bestValue = -std::numeric_limits<double>::infinity();
+MCTSNode* MCTSNode::SelectChild(int rootColor) const {
     MCTSNode* bestChild = nullptr;
+
+    double bestValue;
+    std::function<double(double, double)> keepBestScore;
+    if(player == rootColor) {
+        bestValue = -std::numeric_limits<double>::infinity();
+        keepBestScore = [](int a, int b) { return std::max(a, b); };
+    }
+    else {
+        bestValue = std::numeric_limits<double>::infinity();
+        keepBestScore = [](int a, int b) { return std::min(a, b); };
+    }
 
     for (const auto& child : children) {
         double uctValue = child->UCTValue();
-        if (uctValue > bestValue) {
+        if (uctValue != bestValue) {
             bestValue = uctValue;
             bestChild = child;
         }
@@ -41,13 +52,13 @@ int evaluateMaterial(vector<vector<Checker>>& board) {
     for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
             if (board[i][j].color == "W" && !board[i][j].isKing) {
-                material += 1;
-            } else if (board[i][j].color == "W" && board[i][j].isKing) {
-                material += 3;
-            } else if (board[i][j].color == "B" && !board[i][j].isKing) {
                 material -= 1;
-            } else if (board[i][j].color == "B" && board[i][j].isKing) {
+            } else if (board[i][j].color == "W" && board[i][j].isKing) {
                 material -= 3;
+            } else if (board[i][j].color == "B" && !board[i][j].isKing) {
+                material += 1;
+            } else if (board[i][j].color == "B" && board[i][j].isKing) {
+                material += 3;
             }
         }
     }
@@ -70,16 +81,16 @@ Move MCTSNode::BestMove(Board& board, const vector<vector<Move>>& possibleMoves)
     double bestScore;
 
     std::function<double(double, double)> keepBestScore;
-    if(player == 1) {
+    if(player == BLACK) {
         keepBestScore = [](int a, int b) { return std::max(a, b); };
         bestScore = -std::numeric_limits<double>::infinity();
     }
-    else if(player == 2) {
+    else if(player == WHITE) {
         keepBestScore = [](int a, int b) { return std::min(a, b); };
         bestScore = std::numeric_limits<double>::infinity();
     }
 
-    const int newPlayer = player == 1 ? 2 : 1;
+    const int newPlayer = player == BLACK ? WHITE : BLACK;
 
     for (const auto& moveSet : possibleMoves) {
         for (const auto& m : moveSet) {
@@ -129,4 +140,19 @@ Board MCTSNode::CopyBoard(const Board& board) {
     return newBoard;
 }
 
+
+
+void MCTSNode::showTree(MCTSNode* root, int level) {
+    MCTSNode* current = root;
+    if(current->visits > 0) {
+        cout << std::setw(level) << "" << " Wins: " << current->wins << " Player: " << current->player << endl;
+    }
+
+
+    for(auto child : current->children) {
+        if(level < 2) {
+            showTree(child, level + 1);
+        }
+    }
+}
 
