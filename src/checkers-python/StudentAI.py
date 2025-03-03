@@ -130,9 +130,9 @@ class StudentAI():
 
 
     def RunMCTS(self):
-        root = MCTSNode
+        root = MCTSNode(self.player)
 
-        for i in range(MCTS_ITERATIONS):
+        for i in range(self.MCTS_ITERATIONS):
 
             # Select
             node = root
@@ -162,6 +162,12 @@ class StudentAI():
 
             # Backpropagate
             self.backpropagate(node, winner)
+
+        bestChild = root.SelectBestChild()
+        bestMove = bestChild.move
+
+        return bestMove; 
+
     
     def rollout(self, board, prevPlayer):
         while True:
