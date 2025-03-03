@@ -17,7 +17,7 @@ public:
     StudentAI(int col, int row, int p);
     ~StudentAI();
     virtual Move GetMove(Move board);
-    static constexpr int MCTS_ITERATIONS = 100;
+    static constexpr int MCTS_ITERATIONS = 1000;
     static constexpr int BLACK = 1;
     static constexpr int WHITE = 2;
 
