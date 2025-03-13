@@ -125,10 +125,13 @@ int StudentAI::Rollout(Board& board, int prevPlayer) const {
 void StudentAI::backpropagate(MCTSNode* node, int winner) {
     while (node != nullptr) {
         node->visits++;
-        // if (winner == node->player || winner == -1) {
-        if (winner == player || winner == -1) {
+        if (winner == player) {
             node->wins++;
         }
+        else if (winner == -1) {
+            node->wins += 0.5;
+        }
+
         node = node->parent;
     }
 }
