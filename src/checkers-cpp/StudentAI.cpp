@@ -1,4 +1,5 @@
 #include "StudentAI.h"
+#include <iostream>
 
 
 //The following part should be completed by students.
@@ -21,7 +22,6 @@ Move StudentAI::GetMove(Move move) {
         player = BLACK;
         delete root;
         root = new MCTSNode(player, board);
-
     } else {
         board.makeMove(move, player == WHITE ? BLACK : WHITE);
         
@@ -37,8 +37,6 @@ Move StudentAI::GetMove(Move move) {
                     MCTSNode::DeleteTree(child);
                 }
             }
-            root->children.clear();
-
             delete root;
         }
 
@@ -74,9 +72,14 @@ Move StudentAI::RunMCTS() {
         // Expansion
         const int newPlayer = node->player == BLACK ? WHITE : BLACK;
         int winner = node->board.isWin(newPlayer);
+        Board newBoard = node->ExpandNode();
         if (winner == 0) {
-            Board newBoard = node->ExpandNode();
-            winner = Rollout(newBoard, node->player);
+            if(newBoard.row == -1) {
+                winner = 0;
+            }
+            else {
+                winner = Rollout(newBoard, node->player);
+            }
         }
 
         // Backpropagation
@@ -84,12 +87,12 @@ Move StudentAI::RunMCTS() {
     }
 
     MCTSNode* bestChild = root->SelectBestChild();
-
     for(auto child : root->children) {
         if(child != bestChild) {
             MCTSNode::DeleteTree(child);
         }
     }
+
     delete root;
     root = bestChild;
     bestChild->parent = nullptr;
@@ -255,6 +258,12 @@ Board MCTSNode::ExpandNode() {
     if(children.empty()) {
         createChildren();
     }
+    if(children.empty()) {
+        Board b = Board();
+        b.row = -1;
+        return b;
+    }
+
 
 
     double bestScore;
