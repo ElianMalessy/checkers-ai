@@ -14,7 +14,8 @@ for i in range(1, 21):
     print(f"Starting test {i}")
     file = f"{DIR}/{i}.txt"
     # subprocess.run(["python3", "AI_Runner.py", "8", "8", "3", "l", "../src/checkers-cpp/main", "Sample_AIs/Poor_AI/main.py"], stdout=open(file, "w"))
-    subprocess.run(["python3", "AI_Runner.py", "7", "7", "2", "l", "../src/checkers-cpp/main", "Sample_AIs/Average_AI/main.py"], stdout=open(file, "w"))
+    # subprocess.run(["python3", "AI_Runner.py", "7", "7", "2", "l", "../src/checkers-cpp/main", "Sample_AIs/Average_AI/main.py"], stdout=open(file, "w"))
+    subprocess.run(["python3", "AI_Runner.py", "7", "7", "2", "l", "../src/checkers-cpp/main2", "../src/checkers-cpp/main"], stdout=open(file, "w"))
 
     with open(file) as f:
         result = f.readlines()

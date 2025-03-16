@@ -1,5 +1,4 @@
 #include "StudentAI.h"
-#include <iostream>
 
 
 //The following part should be completed by students.
@@ -27,8 +26,6 @@ Move StudentAI::GetMove(Move move) {
         board.makeMove(move, player == WHITE ? BLACK : WHITE);
         
         MCTSNode* node = root->SelectChild(move);
-        // MCTSNode::showTree(root, 0);
-        // cout << "Selected Node: " << node->move.toString() << " actual move: " << move.toString() << " root move: " << root->move.toString() << endl;
 
         if(node == nullptr) {
             node = new MCTSNode(player, board, move, nullptr);
@@ -48,7 +45,6 @@ Move StudentAI::GetMove(Move move) {
         root = node;
         node->parent = nullptr;
     }
-    // cout << "Player: " << player << " Move: " << root->move.toString() << endl;
 
     Move bestMove = RunMCTS();
     board.makeMove(bestMove, player);
@@ -125,6 +121,7 @@ int StudentAI::Rollout(Board& board, int prevPlayer) const {
 void StudentAI::backpropagate(MCTSNode* node, int winner) {
     while (node != nullptr) {
         node->visits++;
+        // if (winner == player || winner == -1) {
         if (winner == player) {
             node->wins++;
         }
@@ -246,7 +243,6 @@ void MCTSNode::createChildren() {
     for(auto& moves : board.getAllPossibleMoves(player)) {
         for(auto& m : moves) {
             Board newBoard = CopyBoard(board);
-            // cout << m.toString() << endl;
             newBoard.makeMove(m, player);
 
             MCTSNode *child = new MCTSNode(player == BLACK ? WHITE : BLACK, newBoard, m, this);
@@ -292,8 +288,6 @@ Board MCTSNode::ExpandNode() {
         }
     }
 
-    // cout << children[bestMoveIndex]->move.toString() << " " << numPossibleMovesLeft << endl;
-
     Board newBoard = children[bestMoveIndex]->board;
     numPossibleMovesLeft--;
     return newBoard;
@@ -331,16 +325,16 @@ inline bool MCTSNode::isFullyExpanded() {
 
 
 
-void MCTSNode::showTree(MCTSNode* root, int level) {
-    MCTSNode* current = root;
-    if(current->visits > 0) {
-        cout << std::setw(level) << "" << " Wins: " << current->wins << " Player: " << current->player << " Move: " << current->move.toString() << endl;
-    }
-
-    for(auto child : current->children) {
-        if(level < 2) {
-            showTree(child, level + 1);
-        }
-    }
-}
+// void MCTSNode::showTree(MCTSNode* root, int level) {
+//     MCTSNode* current = root;
+//     if(current->visits > 0) {
+//         cout << std::setw(level) << "" << " Wins: " << current->wins << " Player: " << current->player << " Move: " << current->move.toString() << endl;
+//     }
+//
+//     for(auto child : current->children) {
+//         if(level < 2) {
+//             showTree(child, level + 1);
+//         }
+//     }
+// }
 

@@ -4,11 +4,10 @@
 #include "Board.h"
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <cmath>
 #include <functional>
-#include <iomanip>
+// #include <iomanip>
 
 #include "Board.h"
 #include "Move.h"
@@ -43,7 +42,7 @@ public:
    static void DeleteTree(MCTSNode* root);
    static Board CopyBoard(const Board& board);
 
-   static void showTree(MCTSNode* root, int level);
+   // static void showTree(MCTSNode* root, int level);
 };
 
 
