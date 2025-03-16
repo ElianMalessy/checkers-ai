@@ -1,5 +1,4 @@
 #include "StudentAI.h"
-#include <iostream>
 
 
 //The following part should be completed by students.
