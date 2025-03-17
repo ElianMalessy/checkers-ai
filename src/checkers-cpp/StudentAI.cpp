@@ -220,11 +220,11 @@ int evaluateMaterial(vector<vector<Checker>>& board) {
             if (board[i][j].color == "W" && !board[i][j].isKing) {
                 material -= 1;
             } else if (board[i][j].color == "W" && board[i][j].isKing) {
-                material -= 3;
+                material -= 5;
             } else if (board[i][j].color == "B" && !board[i][j].isKing) {
                 material += 1;
             } else if (board[i][j].color == "B" && board[i][j].isKing) {
-                material += 3;
+                material += 5;
             }
         }
     }
@@ -288,13 +288,68 @@ double evaluateProgression(vector<vector<Checker>>& board) {
     return avgB - avgW;
 }
 
+double evaluateMoveCount(Board& board) {
+
+    int eval = 0;
+    
+    for(auto& moves : board.getAllPossibleMoves(1)) {
+        for(auto& m : moves) {
+            eval++;
+        }
+    }
+
+    if (eval > -3 && eval < 3) {
+        eval = 0;
+    }
+
+    for(auto& moves : board.getAllPossibleMoves(2)) {
+        for(auto& m : moves) {
+            eval--;
+        }
+    }
+
+    if (eval > -3 && eval < 3) {
+        eval = 0;
+    }
+
+    return eval;
+}
+
+int evaluateChaining(vector<vector<Checker>>& board) {
+
+    int eval = 0;
+    int BOARD_SIZE = board.size();
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+            if (i > 0 && board[i][j].color == "W") {
+                if (j > 0 && board[i-i][j-1] == "W") {
+                    eval -= 1;
+                }
+                if (j < BOARD_SIZE-1 && board[i-i][j+1] == "W") {
+                    eval -= 1;
+                }
+            } else if (i < BOARD_SIZE-1 && board[i][j].color == "B") {
+                if (j > 0 && board[i+i][j-1] == "B") {
+                    eval -= 1;
+                }
+                if (j < BOARD_SIZE-1 && board[i+i][j+1] == "B") {
+                    eval -= 1;
+                }
+            }
+        }
+    }
+    return eval;
+}
+
 // Heuristic function to evaluate the current board state
-double evaluateBoard(vector<vector<Checker>>& board) {
+double evaluateBoard(Board& board) {
     double score = 0;
 
-    score += static_cast<double>(evaluateMaterial(board));
-    score += static_cast<double>(evaluateCenterControl(board));
-    score += 7*evaluateProgression(board);
+    score += static_cast<double>(evaluateMaterial(board.board));
+    score += 3*static_cast<double>(evaluateCenterControl(board.board));
+    score += 2*evaluateProgression(board.board);
+    score += static_cast<double>(evaluateMoveCount(board));
+    score += 4*static_cast<double>(evaluateChaining(board.board));
 
     return score;
 }
@@ -345,7 +400,7 @@ Board MCTSNode::ExpandNode() {
         }
 
         // some heuristic
-        double score = evaluateBoard(child->board.board);
+        double score = evaluateBoard(child->board);
         double newBestScore = keepBestScore(bestScore, score);
 
         if(newBestScore != bestScore) {

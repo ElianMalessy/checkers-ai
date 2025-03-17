@@ -1,3 +1,6 @@
 {
-    "cmake.sourceDirectory": "/home/hvardhin/CODE/171/checkers-ai/src/checkers-cpp"
+    "cmake.sourceDirectory": "/home/hvardhin/CODE/171/checkers-ai/src/checkers-cpp",
+    "files.associations": {
+        "vector": "cpp"
+    }
 }
